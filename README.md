@@ -1,12 +1,4 @@
-
-
-
-
-
-
-
-
-
+Segunda tentativa de criação da NFT SLB Resende-RJ.
 
 
 // SPDX-License-Identifier: MIT
