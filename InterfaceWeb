@@ -1,0 +1,64 @@
+onst Web3 = require('web3'); // Essa linha usa a funcaoo "require" do Node.js para importar a biblioteca web3.js e cria uma nova instancia da classe Web3.
+const web3 = new Web3(new Web3.providers.HttpProvider('YOUR_NODE_URL')); // Cria-se uma nova instancia da classe web3, passando um provedor de conexao como parametro.
+web3.setProvider(new web3.providers.HttpProvider('https://mainnet.infura.io/v3/6c21960f9e6844f0ab114b21c168aef6')) // Adiciona a conexão com o provedor do nó Infura
+
+// ABI do contrato
+const abi = [{
+    "constant": true,
+    "inputs": [],
+    "name": "getValue",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+}, {
+    "constant": true,
+    "inputs": [],
+    "name": "getCapRate",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+},
+...
+];
+
+//  Exibir a imagem do IPFS como imagem da NFT
+const ipfsAPI = require('ipfs-api');
+const pinata = ipfsAPI({
+    host: 'api.pinata.cloud',
+    port: '443',
+    protocol: 'https',
+    headers: {
+        'pinata_api_key': '39f084c687203dff5ae5',
+        'pinata_secret_api_key': 'ace001fef57aaf2501f869d030b39767289331b7eb25d186a8cb847dd4302347'
+    }
+});
+// Mostrar a imagem recuperada do IPFS na pagina HTML
+const img = document.getElementById('image');
+pinata.pin.get('QmQw1fFgJ16ec82HSkwb8bXPKn3TvrzUi8zwsZ6d1dMD85').then(function(image) {
+    img.src = "https://ipfs.io/ipfs/" + image.IpfsHash;
+});
+
+
+// Recupera o CID da imagem do contrato
+contract.methods.getImageCID().call().then(function(cid) {
+    // Recupera a imagem do IPFS usando o CID
+    pinata.pin.get(cid).then(function(image) {
+        // Exibe a imagem em sua aplicacao
+        document.getElementById("image").src = "data:image/jpg;base64," + image.data;
+    });
+});
+
+
+// Endereco do seu contrato
+const contractAddress = 'YOUR_CONTRACT_ADDRESS'; // Endereco do contrato inteligente 
+
+// Cria uma instancia do contrato
+const contract = new web3.eth.Contract(abi, contractAddress);
+
+// Usa a funcao "getValue" do contrato
+contract.methods.getValue().call().then(console.log);
+
+// Usa a funcao "getCapRate" do contrato
+contract.methods.getCapRate().call().then(console.log);
