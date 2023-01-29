@@ -1,37 +1,10 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-  abstract contract MyERC1155 is ERC1155 {
-    event Transfer (address indexed from, address indexed to, uint256 indexed tokenId, uint256 amount);
-    event Mint(address to, uint256 tokenId, uint256 amount);
-    event Burn(address from, uint256 tokenId, uint256 amount);
-    event OwnershipTransferError(address msgSender, address owner, uint256 tokenId);
-
-    constructor() {
-
-    }
-
-    function _transferFrom(address from, address to, uint256 tokenId, uint256 amount) internal override {
-      super._transferFrom(from, to, tokenId, amount);
-      emit Transfer(from, to, tokenId, amount);
-
-    }
-
-    function _mint(address to, uint256 tokenId, uint256 amount) internal override {
-      super._mint(to, tokenId, amount);
-      emit Mint(to, tokenId, amount);
-    }
-
-    function _burn(address from, uint256 tokenId, uint256 amount) internal override {
-      super._burn(from, tokenId, amount);
-      emit Burn(from, tokenId, amount);
-    }
-
-  }
-
-contract SLBResendeRJ  {
+contract SLBResendeRJ is ERC1155 {
     address owner;
     string public name;
     string public location;
@@ -42,22 +15,23 @@ contract SLBResendeRJ  {
     uint256 public capRate;
     mapping(address => bool) public tokens; // mapping para armazenar quais tokens pertencem a qual endereço
     uint256 public totalSupply;
-    address[] public whitelist;
+    address[] public whitelistguard;
+    mapping(address => bool) public whitelist;
     mapping (address => uint256) public fragments; // mapping para armazenar a quantidade de fragmentos de cada endereço
     uint256 public maxSupply = 2000000; // limite máximo de fragmentos
     mapping(uint256 => address) public tokenIdToOwner; 
     event OwnershipTransferError(address msgSender, address owner, uint256 tokenId);
 
-    constructor() public {
+    constructor() ERC1155("IPFS") {
         owner = msg.sender;
         name = "SLB Resende-RJ";
         location = "Resende-RJ";
         landArea = 70000;
         builtArea = 33533;
-        value = 100000000;
-        capRate = 11.4;
+        value = 200000000;
+        capRate = 10; //
         totalSupply = 2000000;
-        whitelist.push(msg.sender);
+        whitelistguard.push(msg.sender);
        }
 
      function fragment() public {
@@ -81,98 +55,4 @@ contract SLBResendeRJ  {
        
         }
 
-    function getValue() public view returns (uint256) {
-           return value;
-        
-    }
-    function getCapRate() public view returns (uint256) {
-            return capRate;
-    }
-         
-
-    function balanceOf(address tokenOwner) public view returns (uint256) {
-        require(whitelist[msg.sender] == true, "Voce nao esta na whitelist"); // verifica se o remetente está na whitelist
-        if (tokens[tokenOwner]){
-            return 1;
-        } else {
-            return 0;
-        }
-        }
-
-    function addWhitelist(address _address) public {
-        require(msg.sender == owner, "Apenas o proprietario pode adicionar enderecos a whitelist");
-        bool addressExist = false;
-        for(uint i = 0; i< whitelist.length; i++){
-            if(whitelist[i] == _address) addressExist = true;
-            }
-        require(!addressExist, "Endereco ja esta na whitelist");
-        whitelist.push(_address);
-        }
-    
-    function removeWhitelist(address _address) public {
-        require(msg.sender == owner, "Apenas o proprietario pode remover enderecos da whitelist");
-        bool addressExist = false;
-        for (uint i = 0; i < whitelist.length; i++) {
-            if (whitelist[i] == _address) {
-                addressExist = true;
-                break;
-                }
-        }
-        uint256 i = whitelist.indexOf(msg.sender); // Encontra o índice do elemento a ser removido
-        require(i != -1, "Endereco nao encontrado na whitelist"); // Certifique-se de que o elemento existe no array
-        whitelist.splice(i, 1); // Remove o elemento do array
-        }
-    
-    function split(address to, uint256 fragmentCount) public {
-        require(msg.sender == tokenIdToOwner[tokenId], "Voce nao e o proprietario deste token");
-        require(fragmentCount > 0 && fragmentCount < totalSupply, "Numero invalido de fragmentos");
-        for (uint256 i = 0; i < fragmentCount; i++) {
-        require(tokenIdToOwner[i] == msg.sender, "Voce nao e o proprietario desse fragmento");    
-        require(msg.sender == owner, "Apenas o proprietario pode comprar fragmentos de NFT"); // verifica se o remetente é o proprietário
-        require(fragments[msg.sender] >= fragmentCount, "Voce nao possui fragmentos suficientes para vender"); // verifica se o remetente possui fragmentos suficientes
-        require(whitelist[to] == true, "O destinatario nao esta na whitelist"); // verifica se o destinatário está na whitelist
-        require(fragments[to] + fragmentCount <= maxSupply, "A compra ultrapassa o limite maximo de fragmentos"); // verifica se o total de fragmentos do destinatário não ultrapassa o limite
-        fragments[msg.sender] -= fragmentCount; // remove fragmentos do remetente
-        fragments[to] += fragmentCount; // adiciona fragmentos ao destinatário
-        tokenIdToOwner[i] = to;
-        }
-        totalSupply -= fragmentCount;
-    }
-
-    function merge(address from, uint256 fragmentCount) public {
-        require(tokenIdToOwner[from] == msg.sender, "Voce nao e o proprietario desse fragmento");
-        require(fragmentCount > 0 && fragmentCount < totalSupply, "Numero invalido de fragmentos");
-        for (uint256 i = 0; i < fragmentCount; i++) {
-        require (tokenIdToOwner[i] == from, "O remetente nao e o proprietario desse fragmento");
-        require(msg.sender == owner, "Apenas o proprietario pode vender fragmentos de NFT"); // verifica se o remetente é o proprietário
-        require(fragments[from] >= fragmentCount, "O remetente nao possui fragmentos suficientes para vender"); // verifica se o remetente possui fragmentos suficientes
-        require(whitelist[from] == true, "O remetente nao esta na whitelist"); // verifica se o remetente está na whitelist
-        fragments[from] -= fragmentCount; // remove fragmentos do remetente
-        fragments[msg.sender] += fragmentCount; // adiciona fragmentos ao destinatário
-        tokenIdToOwner[i] = msg.sender;
-        }
-        totalSupply += fragmentCount;
-     }
-
-    
-    function checkPermission(address user) public view returns (bool) { //  verifica se o usuário atual é o proprietário ou está na whitelist
-        if(msg.sender == owner || whitelist[user]){
-            return true;
-        } else {
-            return false; 
-        }
-    } 
-
-    function setImageHash(string memory newImageHash) public {
-        require(msg.sender == owner, "Somente o proprietario pode atribuir o hash da imagem");
-        imageHash = newImageHash;
-    
-      }
-    function getImageHash() public view returns (string memory) {
-        return imageHash;
-      }  
-
-
 }
-
-
