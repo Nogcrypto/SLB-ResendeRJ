@@ -1,58 +1,71 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-contract SLBResendeRJ is ERC1155 {
-    address owner;
-    string public name;
-    string public location;
-    string public imageHash;
-    uint256 public landArea;
-    uint256 public builtArea;
-    uint256 public value;
-    uint256 public capRate;
-    mapping(address => bool) public tokens; // mapping para armazenar quais tokens pertencem a qual endereço
-    uint256 public totalSupply;
-    address[] public whitelistguard;
-    mapping(address => bool) public whitelist;
-    mapping (address => uint256) public fragments; // mapping para armazenar a quantidade de fragmentos de cada endereço
-    uint256 public maxSupply = 2000000; // limite máximo de fragmentos
-    mapping(uint256 => address) public tokenIdToOwner; 
-    event OwnershipTransferError(address msgSender, address owner, uint256 tokenId);
+/**
+ * Importando a biblioteca 'ERC1155LazyMint' da 'ThirdWeb.
+ */
+import "@thirdweb-dev/contracts/base/ERC1155LazyMint.sol";
 
-    constructor() ERC1155("IPFS") {
-        owner = msg.sender;
-        name = "SLB Resende-RJ";
-        location = "Resende-RJ";
-        landArea = 70000;
-        builtArea = 33533;
-        value = 200000000;
-        capRate = 10; //
-        totalSupply = 2000000;
-        whitelistguard.push(msg.sender);
-       }
+/**
+ * @title SLB Resende-RJ
+ * @dev herda e utiliza o `ERC1155LazyMint` no nosso contrato inteligente
+ *  
+ */
+contract SLBResende is ERC1155LazyMint{ 
+    // Número total de NFTs por coleção de pacotes
+    uint256[] private supplies = [2000000,2000000];
+    // Número total de NFTs cunhados
+    uint256[] private minted = [0,0];
 
-     function fragment() public {
-        require(msg.sender == owner, "Apenas o proprietario pode fragmentar a NFT"); // verifica se o remetente é o proprietário
-        require(totalSupply + 2000000 <= maxSupply, "Nao e possivel fragmentar mais, limite maximo alcancado"); // verifica se o totalSupply não ultrapassa o limite
-        require(fragments[msg.sender] < totalSupply, "Voce ja possui todos os fragmentos"); // verifica se o remetente já possui todos os fragmentos existentes
-        require(fragments[msg.sender] != totalSupply, "Voce ja possui todos os fragmentos existentes, nao e possivel adicionar mais");
-        for (uint i = 0; i < 2000000; i++) {
-            require(tokenIdToOwner[totalSupply + i] == address(0), "Esse fragmento ja foi atribuido");
-            tokenIdToOwner[totalSupply + i] = msg.sender;
-        }
-        if (msg.sender != owner) {
-            emit OwnershipTransferError(msg.sender, owner, totalSupply);
-            return;
+    // mapeamento aninhado para verificar se o usuário pode criar apenas um NFT por coleção de NFT
+    mapping(uint256 => mapping(address => bool)) public member;
 
-        }
+    /**
+     * @dev O construtor da biblioteca ERC1155LazyMint leva quatro Parâmetros
+     * _name of the NFT, _symbol do NFT,
+     *  _royaltyRecipient (endereço) quem receberá royalties na venda secundária, _royaltyBps (porcentagem de royality)
+     * não precisamos definir Royality para o propósito de nosso contrato inteligente. definir _royaltyBps como Zero
+     * @param _name: nome de toda a coleção de pacotes NFT
+     * @param _symbol: símbolo de toda a coleção de pacotes NFT
+     */
+    constructor(
+        string memory _name,
+        string memory _symbol
+    ) ERC1155LazyMint (_name, _symbol, msg.sender, 0){}
 
 
-        fragments[msg.sender] += 2000000; // adiciona os fragmentos ao endereço do remetente
-        totalSupply += 2000000; // adiciona os fragmentos ao totalSupply
-       
-        }
+    /**
+     * @dev Cunha NFT e também verifica várias condições
+     * 1. Um usuário pode cunhar apenas um NFT por coleção de pacotes
+     * 2. Dá erro se _tokenId estiver errado
+     * 3. Verifica e dá erro se todos os NFTs forem cunhados
+     * 
+     * @param _tokenId da coleção do pacote NFT 
+     */
+    function mintNFT(uint256 _tokenId) 
+        external
+        {
+         require(
+            !member[_tokenId][msg.sender],
+            "Voce ja reivindicou este NFT."
+        );    
+        require(_tokenId <= supplies.length-1,"O NFT nao existe");
+        uint256 index = _tokenId;
 
+        require (minted[index] + 1 <= supplies[index], "Todos os NFT foram cunhados");
+        _mint(msg.sender, _tokenId, 1, "");
+        // "" são dados que são colocados vazios
+        minted[index] += 1;
+        member[_tokenId][msg.sender] = true;
+    }
+
+    /**
+     * @dev Dá o número total de NFTs cunhados por coleção de pacotes NFT
+     * @param _tokenId da coleção do pacote NFT 
+     */
+    function totalNftMinted(uint256 _tokenId) public view returns(uint256){
+        return minted[_tokenId];
+    }
 }
