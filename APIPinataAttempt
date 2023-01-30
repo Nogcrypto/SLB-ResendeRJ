@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
+
+const Web3 = require('web3'); // Essa linha usa a função "require" do Node.js para importar a biblioteca web3.js e cria uma nova instância da classe Web3.
+const Web3 = require('web3'); // cria uma nova instância da classe web3, passando um provedor de conexão como parâmetro.
+const web3 = new Web3(new Web3.providers.HttpProvider('YOUR_NODE_URL'));
+const ipfsAPI = require('ipfs-api');
+const ERC1155 = artifacts.require("ERC1155");
+
+const pinata = ipfsAPI({
+    host: 'api.pinata.cloud',
+    port: '443',
+    protocol: 'https',
+    headers: {
+        'pinata_api_key': '5438977196ef88e6e8ef',
+        'pinata_secret_api_key': 'Y6bb01fe5136bdd9194a4'
+    }
+});
+
+// Definir a base URI
+const baseURI = "https://examplo.com/token/";
+
+// Faz o deploy do contrato ERC-1155 e passa a baseURI para o construtor
+module.exports = async function(deployer) {
+    await deployer.deploy(ERC1155, baseURI);
+};
+
+// ABI do seu contrato
+const abi = [{
+    "constant": true,
+    "inputs": [],
+    "name": "getValue",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+}, {
+    "constant": true,
+    "inputs": [],
+    "name": "getCapRate",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+},
+...
+];
+
+// Endereço do seu contrato
+const contractAddress = 'YOUR_CONTRACT_ADDRESS';
+
+// Cria uma instância do contrato
+const contract = new web3.eth.Contract(abi, contractAddress);
+
+// Usa a função "getValue" do contrato
+contract.methods.getValue().call().then(console.log);
+
+// Usa a função "getCapRate" do contrato
+contract.methods.getCapRate().call().then(console.log);
+
+// Recuperar a imagem usando o CID
+pinata.pin.get("").then(console.log);
