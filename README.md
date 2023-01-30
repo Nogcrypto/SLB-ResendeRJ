@@ -1,16 +1,12 @@
 Trabalho do módulo de NFT da Universidade Católica de Pernambuco.
 Programado por Nogcrypto e elaborado por Rômulo Parente , Marise Figueras e Rolando Priviero.
 
-Projeto de NFT aplicado na tokenização imobiliária que consiste em fragmentar duas NFTs de operações diferentes em 1.000.000 de frações, onde cada uma será mintada em valores entre R$100 e R$200 com boas taxas de retorno frente a inflação.
+Projeto de NFT aplicado na tokenização imobiliária que consiste em fragmentar uma NFT sendo do tipo de operação Sale and Leaseback em 2.000.000 de frações, onde acontecerá o mint na rede polygon.
 
-A NFT SLB-ResendeRJ é uma operação de sale and leaseback, em que está sendo armazenado em um contrato inteligente chamado "SLBResendeRJ" que herda de um contrato "MyERC1155", que herda de "ERC1155" da biblioteca OpenZeppelin. Esse contrato gerencia tokens ERC-1155.
+Este contrato inteligente foi criado usando a linguagem de programação Solidity e a biblioteca 'ERC1155LazyMint' da ThirdWeb. Ele foi deployado na Blockchain da Polygon e utiliza o padrão de token ERC1155. O total supply é especificado pela array 'supplies', que tem dois elementos, cada um com o valor de 1.000.000. O max supply não foi especificado e pode ser adicionado posteriormente pelo proprietário do contrato.
 
-O contrato temvárias funções de segurança para transferir, queimar e criar novos tokens, além de vários eventos que são emitidos quando essas operações são realizadas. Ele também possui uma função "fragment" que permite ao proprietário fragmentar o ativo em frações menores e distribuir para outros endereços.
+As informações adicionais ou metadados sobre o imóvel podem ser encontradas na descrição na Opensea. O objetivo deste contrato inteligente é mintar NFTs de uma coleção de pacotes, onde cada usuário só pode reivindicar um NFT por coleção. A verificação é feita por meio do mapeamento 'member'. O contrato também possui métodos para cunhar as NFTs, verificar se um usuário pode reivindicar uma NFT e verificar o número total de NFTs cunhadas por coleção.
 
+A biblioteca 'ERC1155LazyMint' importada no contrato e as verificações realizadas na função mintNFTs são outros aspectos interessantes que podem ser incluídos. Além disso, as regras de emissão, como a limitação de um usuário só poder reivindicar um NFT por coleção, e a estrutura de dados 'member' usada para registrar as reivindicações de NFTs também são interessantes de se considerar.
 
-InterfaceWeb
- Bibliotecas importadas: ipfs-api e web3.js.
- 
- Usa a biblioteca web3.js para se conectar a um smart contract em uma blockchain, usando o provedor de conexão HTTP com o endereço de um nó do indufa específico. Ele também usa a biblioteca ipfs-api para recuperar a imagem do IPFS usando o CID recuperado do contrato inteligente. Ele faz isso definindo o endereço da API do Pinata, a chave e o segredo da API. E também recupera o elemento da imagem da página HTML e atribui a ela a imagem recuperada do IPFS.
- 
- Uso a função "require" do Node.js para importar a biblioteca web3.js e cria uma nova instância da classe Web3. E depois importa a biblioteca ipfs-api especificando as configurações do host, porta, protocolo e cabeçalhos com a chave e segredo da API do Pinata. Utiliza o método pin.get() para recuperar a imagem do IPFS usando o CID recuperado do contrato. Também exibe a imagem recuperada na página HTML. Realiza chamada para as funções "getValue" e "getCapRate" do contrato inteligente e exibe o resultado no console.
+Uma das coisas a se enfatizar é que mostra a segurança e o controle na emissão desses NFTs. No futuro, novos projetos relacionados a real estate podem ser lançados pelo nosso grupo, mas isso ainda não há nada concreto.
